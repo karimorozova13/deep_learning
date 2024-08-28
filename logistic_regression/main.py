@@ -152,9 +152,124 @@ print('X test size', x_test.shape)
 print('y train size', y_train.shape)
 print('y test size', y_test.shape)
 
+# %%
 
+def initialize_weights_bias(dimension):
+    # dimension - number of input features
+    w = np.full((dimension, 1), 0.01)
+    b = 0.0
+    return w,b
 
+# %%
 
+# return y_pred
+def sigmoid(z):
+    y_pred = 1 / (1 + np.exp(-z))
+    return y_pred
+
+# %%
+
+def forward_propagation(w, b, x_train, y_train):
+    z = np.dot(w.T, x_train) + b
+    
+    # probabilistic 0-1
+    y_pred = sigmoid(z)
+    
+    loss = -1 * y_train * np.log(y_pred) - (1 - y_train) * np.log(1 - y_pred)
+    
+    # x_train.shape[1]  is for scaling
+    cost = np.sum(loss) / x_train.shape[1]
+    
+    return cost
+
+# %%
+# похідні 
+derivative_weight = np.dot(x_train, (y_pred - y_train).T) / x_train.shape[1]
+
+derivative_bias = np.sum(y_pred - y_train) / x_train.shape[1]
+
+# %%
+
+def forward_backward_propagation(w, b, x_train, y_train, eps=1e-5):
+    
+    #forward propagation
+    z = np.dot(w.T, x_train) + b
+    y_pred = sigmoid(z)
+    loss = -1 * y_train * np.log(y_pred + eps) - (1 - y_train) * np.log(1 - y_pred + eps)
+    cost = np.sum(loss) / x_train.shape[1]
+    
+    # backward propagation
+    derivative_weight = np.dot(x_train, (y_pred - y_train).T) / x_train.shape[1]
+    derivative_bias = np.sum(y_pred - y_train) / x_train.shape[1]
+
+    gradients = {"derivative_weight": derivative_weight,"derivative_bias": derivative_bias}
+    
+    return cost, gradients
+
+# %%
+
+#updating (learning) parameters
+
+def update(w, b, x_train, y_train, learning_rate, num_of_iter):
+    cost_list = []
+    index = []
+    
+    # updating(learning) parameters is number_of_iterarion 
+    for i in range(num_of_iter):
+        cost, gradients = forward_backward_propagation(w, b, x_train, y_train)
+        cost_list.append(cost)
+        index.append(i)
+        
+        w = w - learning_rate * gradients['derivative_weight']
+        b = b - learning_rate * gradients['derivative_bias']
+        
+    # we update(learn) parameters weights and bias
+    parameters = {'weight': w, 'bias': b}
+    plt.plot(index, cost_list)
+    plt.xticks(index, rotation='vertical')
+    plt.xlabel('Number of iteration')
+    plt.ylabel('Cost')
+    plt.show()
+    
+    return parameters, gradients, cost_list
+
+# %%
+
+def predict(w, b, x_test):
+
+    z = sigmoid(np.dot(w.T, x_test) + b)
+
+    Y_pred  = np.zeros((1,x_test.shape[1]))
+    
+    # if z > 0.5, our prediction is 1 (y_pred=1)
+    # if z <= 0.5, our prediction is 0 (y_pred=0)
+    
+    for i in range(z.shape[1]):
+        if z[0,i] <= 0.5:
+            Y_pred[0,i] = 0
+        else:
+            Y_pred[0,i] = 1
+
+    return Y_pred        
+
+# %%
+
+def logistic_regression(x_train, y_train, x_test, y_test, learning_rate, num_of_iter):
+    dimension = x_train.shape[0]
+    w, b = initialize_weights_bias(dimension)
+    
+    parameters, gradients, cost_list = update(w, b, x_train, y_train, learning_rate, num_of_iter)
+    
+    y_pred_test = predict(parameters['weight'], parameters['bias'], x_test)
+    y_pred_train = predict(parameters['weight'], parameters['bias'], x_train)
+    
+    # Print train/test Errors
+    print("train accuracy: {} %".format(100 - np.mean(np.abs(y_pred_train - y_train)) * 100))
+    print("test accuracy: {} %".format(100 - np.mean(np.abs(y_pred_test - y_test)) * 100))
+    
+# %%
+
+logistic_regression(x_train, y_train, x_test, y_test, learning_rate=0.00001, num_of_iter=50)
 
 
 
