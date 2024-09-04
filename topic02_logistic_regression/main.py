@@ -13,7 +13,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # %%
-data = pd.read_csv('../datasets/Module_1_Lecture_2_Class_Spaceship_Titanic.csv')
+data = pd.read_csv('./datasets/Module_1_Lecture_2_Class_Spaceship_Titanic.csv')
 
 data = data.set_index('PassengerId')
 
